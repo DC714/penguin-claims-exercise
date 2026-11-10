@@ -74,7 +74,7 @@ Some notes contain text addressed to a coder or system, for example "NOTE TO AUT
 
 ## Coverage-date warning
 
-`WARN-COVERAGE` is raised when the member's coverage start date in the roster is after the date of service. It is a warning, not an HR rule: the bulletin does not mention coverage dates, so it is not presented as a denial. In the current data it fires on 0 visits, so it is implemented but has not been seen on real data, and I did not verify test coverage for it. WARN-MEMBER (2 visits, E-50687 and E-51005) covers members that cannot be matched to the roster.
+`WARN-COVERAGE` is raised when the member's coverage start date in the roster is after the date of service. It is a warning, not an HR rule: the bulletin does not mention coverage dates, so it is not presented as a denial. In the current data it fires on 0 visits, so it is implemented and unit-tested (`src/pipeline/__tests__/world.test.ts`) but has not been seen on real data. WARN-MEMBER (2 visits, E-50687 and E-51005) covers members that cannot be matched to the roster.
 
 ## What was cut
 
