@@ -44,3 +44,9 @@ Installed: next 16.4.6 (docs read from `node_modules/next/dist/docs/01-app`). Sc
 - Server Actions/Functions: use the `'use server'` directive (top of an async function or file); invoked from `<form action={fn}>` or `startTransition`. Body size limit and `allowedOrigins` are configured under `serverActions` in `next.config.ts` (`bodySizeLimit` default 1MB; raise it for file uploads).
 - Middleware is now called `proxy` (`01-getting-started/16-proxy.md`); not needed for this project.
 - Tooling: @types/node was bumped to ^22 because vitest 5 peers require `^22 || >=24`; Next itself is unaffected.
+
+## LLM escalation (Task 10)
+
+- Escalated only the 12 `needs_escalation` visits (non-duplicates) through `claude -p` (user's own subscription, no API key), run from an empty temp dir with `--tools ""`, `--no-session-persistence`, `--disable-slash-commands`, `--strict-mcp-config`, `--output-format json`, `--model sonnet`. The model id comes from the key of `modelUsage` in the JSON (`claude-sonnet-5-5`), shown as source `sonnet-5.5` next to `rules-v1`.
+- The note is untrusted data: the prompt says so, and every model code must carry a quote that is a literal substring of the note (whitespace-normalised), a code in the table, and not inside an embedded-instruction sentence. Otherwise it is rejected by `validateLlmCodes`. Model output is never edited to match the rules.
+- Result: 12 escalated, 33 codes accepted, 0 rejected; no injected code (V-160, P-410, V-140, P-215, D-512, P-350, D-121) appeared in any model output. Disagreements with rules-v1 are kept: the model omitted M-25 on two same-day procedure visits and added V-300 on two procedure-only visits.
