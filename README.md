@@ -11,10 +11,15 @@ It is a pilot-review build for the "Code the Encounters" exercise. All clinic, i
 - **Rules first.** `src/engine` reads each note and suggests codes from Northgate's coding manual v3.2. Every suggested code carries a quoted evidence sentence from the note (manual rule G11, and the compliance requirement in Dana's email).
 - **Denial checks.** `src/engine/denials.ts` applies Harborline rules HR-01 to HR-08 deterministically. Each flag states why, and where possible gives a billable fix (for example, V-150 becomes V-110 + M-95 under HR-02).
 - **Model for hard visits.** Visits the rules cannot settle confidently (12 of 251) are escalated to a model through the Claude Code CLI (`claude -p`). Results are stored under a `source` label such as `sonnet-5.5`, beside `rules-v1`, so models can be compared side by side on the visit page.
+- **Members.** A note's member is matched to the Harborline roster by member ID, else by name plus birth date, else by name alone (the visit then carries a MEMBER warning asking Northgate to confirm the birth date or member number). If two roster members match, the visit stays unmatched and is sent for review instead of guessing.
 - **Storage.** Neon Postgres (`db/schema.sql`). The deployed app only reads results and saves accept/reject decisions.
-- **UI.** Next.js 16 with Mantine. Pages: review queue (clickable summary tiles and rule badges, date range and provider filters, all kept in the URL so a filtered view can be shared), visit page with highlighted evidence and denial risks shown first, a comparison against the 40 coder examples, and the full Northgate coding manual and Harborline bulletin as searchable pages. Every rule badge in the app links to its rule text.
+- **UI.** Next.js 16 with Mantine, styled to the colors and type of penguinai.co (Outfit and Public Sans). Pages: review queue (clickable summary tiles and rule badges, date range and provider filters, all kept in the URL so a filtered view can be shared), visit page with highlighted evidence and denial risks shown first, a comparison against the 40 coder examples, and the full Northgate coding manual and Harborline bulletin as searchable pages. Every rule badge in the app links to its rule text.
 
 Where the manual and the bulletin disagree, the manual decides the suggestion and the bulletin produces a flag with a billable alternative. See `docs/decision-log.md`.
+
+## Tech stack
+
+TypeScript on Node.js; Next.js 16 (App Router) and Mantine for the app; Neon serverless Postgres; Vercel for hosting; Vitest, ESLint and TypeScript for checks; exceljs, unpdf and csv-parse for reading the clinic files; the Claude Code CLI for the model step. The coding engine is plain TypeScript with no network or database access, so it can be tested on its own.
 
 ## Run it
 
@@ -34,11 +39,14 @@ The clinic files are not in this repo. Point `DATA_DIR` at the folder that holds
 
 | Command | What it does |
 |---|---|
-| `npm test` | Unit tests (vitest). |
+| `npm test` | Unit tests (vitest, 93 tests). |
+| `npm run lint` | ESLint. |
+| `npm run build` | Production build of the app. |
 | `npm run compare` | Runs the engine over the data in `DATA_DIR` (no database) and compares it with the 40 coder examples. |
-| `npm run ingest` | Creates the tables, then loads all data and the rules-v1 results into the database. It truncates every table, including saved accept/reject decisions. |
-| `npm run escalate` | Sends the hard visits to the model via `claude -p` and stores the validated results. Needs the Claude Code CLI logged in. Set `ESCALATE_MODEL=opus` to add another model beside the default `sonnet`. |
+| `npm run ingest` | Creates the tables if needed, then reloads visits, members, prior authorizations and the rules-v1 results. It can be re-run safely: saved accept/reject decisions and model results are kept. |
+| `npm run escalate` | Sends the hard visits to the model via `claude -p` and stores the validated results. Needs the Claude Code CLI logged in. Set `ESCALATE_MODEL=opus` to add another model beside the default `sonnet`. Re-run it after changing the engine, because model rows are kept for notes that did not change. |
 | `npm run dev` | Starts the app on localhost. |
+| `npx tsx --env-file=.env.local scripts/verify-db.ts` | Checks that every stored evidence quote is a literal substring of its note. |
 
 ## Layout
 
@@ -61,7 +69,9 @@ Run on the 260 records in the xlsx and PDF batch (251 unique visits after removi
 
 - 35 of 40 coder examples match exactly (V-150 counted as its billable form V-110 + M-95).
 - The 5 differences: 4 are coder errors against manual v3.2 (E-50095 and E-50063 code a declined injection; E-50047 and E-50028 use the wrong time level), and 1 is a manual-versus-bulletin conflict (E-50236, M-25 under HR-08).
+- 53 of the 251 visits are flagged as likely Harborline denials (HR-02 on 31, HR-01 on 10, HR-03 on 6, HR-07 on 4, HR-08 on 2; a visit can hit more than one rule).
 - 12 visits were escalated to the model; 33 model codes were accepted and 0 rejected by validation.
+- 14 visits have no member number in the note: 7 were matched by name and birth date, 5 by name only (each carries a MEMBER warning), and 2 could not be matched because two roster members share the name and birth date.
 - 31 telehealth visits would all be denied if billed as V-150. See the telehealth brief.
 
 These are agreement figures with the clinic's coders, not accuracy against a verified answer key. The coder examples are the only reference available.
