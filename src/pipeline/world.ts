@@ -34,7 +34,7 @@ export function buildRecords(raws: RawVisit[], roster: Member[]): VisitRecord[] 
     if (!dup) seen.set(key, r.encId);
     else warnings.push({ kind: 'duplicate', message: `Same note as ${dup}.` });
     return {
-      encId: r.encId, dbId: copy === 1 ? r.encId : `${r.encId}~${copy}`, sourceFile: r.sourceFile, provider: r.provider, dos, memberId: res.member?.memberId, resolveMethod: res.method, patientName: n.patientName,
+      encId: r.encId, dbId: copy === 1 ? r.encId : `${r.encId}~${copy}`, sourceFile: r.sourceFile, provider: r.provider || n.provider, dos, memberId: res.member?.memberId, resolveMethod: res.method, patientName: n.patientName,
       note: n.normalized, minutes: eng.minutes, duplicateOf: dup, warnings, needsEscalation: eng.needsEscalation || !res.member,
       suggestions: eng.suggestions, notCoded: eng.notCoded,
     };

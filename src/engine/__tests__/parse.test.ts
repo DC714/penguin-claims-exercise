@@ -53,3 +53,19 @@ describe('parseNote', () => {
     expect(n.sentences).toEqual(['Scheduled office visit.', 'Chest pain: atypical, reproducible with palpation, no cardiac risk features.', 'Time 55m.']);
   });
 });
+
+describe('parseNote provider', () => {
+  it('reads the provider from every header layout in the data', () => {
+    // PDF layout (E-50042): "Provider:" on the encounter line
+    expect(parseNote('Northgate Family Clinic — Visit Note\nEncounter #: E-50042    Date of service: 2026-06-10    Provider: Dr. L. Marchetti\nPt: Test Patient (M-100001) | 2026-06-10 | Dr. L. Marchetti\n- Office visit.').provider).toBe('Dr. L. Marchetti');
+    // paragraph layout
+    expect(parseNote('Member ID: M-100553. DOS 07/13/2026. Seen by PA T. Lindgren.\nVideo visit via clinic portal.').provider).toBe('PA T. Lindgren');
+    // pipe-separated bullet layout
+    expect(parseNote('Pt: Olivia Brennan (M-101577) | 2026-06-14 | NP J. Whitaker\n- Scheduled office visit.').provider).toBe('NP J. Whitaker');
+    // S/O layout
+    expect(parseNote('Member ID: M-100870\nDate: 06/01/2026\nProvider: Dr. L. Marchetti\nS/O: Scheduled office visit.').provider).toBe('Dr. L. Marchetti');
+  });
+  it('is undefined when the note names no provider', () => {
+    expect(parseNote('Member ID: M-100001\nDate: 06/01/2026\nS/O: Office visit.').provider).toBeUndefined();
+  });
+});
