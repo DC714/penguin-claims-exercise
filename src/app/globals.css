@@ -3,3 +3,7 @@ pre { margin: 0; }
 .row-link::after { content: ""; position: absolute; inset: 0; }
 tr.row { position: relative; }
 .row-link { white-space: nowrap; }
+.manual-anchor { scroll-margin-top: 76px; }
+.manual-anchor:target { background: var(--mantine-color-brand-0); outline: 2px solid var(--mantine-color-brand-6); outline-offset: -2px; }
+/* links inside a clickable row sit above the row's overlay link */
+tr.row .rule-link { position: relative; z-index: 1; }

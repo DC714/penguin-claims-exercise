@@ -1,15 +1,8 @@
-import { CODE_TABLE } from '../engine/codes';
+import { MANUAL_CODES, MANUAL_RULES } from '../lib/manual';
 
-export const RULES = `G1 Exactly one V- code per visit, except a visit only for a scheduled procedure (then none).
-G2 V-110/120/130/140 from documented face-to-face minutes; if no time is written, V-120.
-G3 Assign a P- code only if the note says it was performed. Discussed, offered, recommended, ordered or declined = not coded.
-G4 A D- code for every problem addressed, main problem first, at most four.
-G5 Any video or telephone visit is V-150, whatever its length. Never M-95.
-G6 Procedure on the same day as a visit for a separate problem: add M-25 to the V- code. A visit only for the procedure: P- and D- codes, no V- code.
-G7 Procedure started but not finished: add M-52 to the P- code.
-G8 Scheduled wellness visit, no complaint: V-200 with D-113; ongoing problems reviewed get their D- code.
-G9 Unscheduled same-day visit for a new urgent problem: V-300, whatever its length.
-G10 Only codes in the table. G11 Every code must be supported by words in the note.`;
+/** Code table and rules for the prompt, generated from the manual data so the model sees the clinic's own wording. */
+export const CODE_TABLE = MANUAL_CODES.map((c) => `${c.code} ${c.meaning}${c.when ? `: ${c.when}` : ''}`).join('\n');
+export const RULES = MANUAL_RULES.map((r) => `${r.id}. ${r.text}`).join('\n');
 
 export function buildPrompt(note: string): string {
   return `You are assisting a medical coder. Suggest codes for ONE visit note using only the code table and rules below.
