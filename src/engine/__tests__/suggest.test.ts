@@ -99,6 +99,24 @@ describe('regressions (review findings)', () => {
   });
 });
 
+describe('regressions (Task 6 sweep)', () => {
+  const r = (body: string) => suggestCodes(H + body);
+  const m25 = (x: ReturnType<typeof r>) => x.suggestions.find((s) => s.code === 'M-25');
+  it('M-25 cites the separate problem and is high confidence only when one exists (G6)', () => {
+    const sep = r('Office visit for chronic problem management. Hypertension: BP 130/80, continue lisinopril. Also performed left knee corticosteroid injection today for osteoarthritis pain. Time 25m.');
+    expect(claimCodes(sep.suggestions)).toEqual(['V-120', 'M-25', 'P-310', 'D-101', 'D-107']);
+    expect(m25(sep)).toMatchObject({ confidence: 'high', evidence: 'Hypertension: BP 130/80, continue lisinopril.' });
+    const same = r('Office visit. Knee pain: effusion right knee. Knee injection performed after consent. Time 20 minutes.');
+    expect(m25(same)?.confidence).toBe('low');
+    expect(same.needsEscalation).toBe(true);
+  });
+  it('urgent visit whose procedure has a separate problem keeps M-25 high', () => {
+    const x = r('Same-day add-on, walked in with acute complaint. Headache: tension-type pattern. Right wrist tender after fall; splint applied, x-ray ordered. Time 20m.');
+    expect(claimCodes(x.suggestions)).toEqual(['V-300', 'M-25', 'P-330', 'D-115', 'D-114']);
+    expect(m25(x)).toMatchObject({ confidence: 'high', evidence: 'Headache: tension-type pattern.' });
+  });
+});
+
 describe('evidence invariant', () => {
   it('every suggestion/notCoded evidence is a substring of the normalized note (all fixtures)', () => {
     expect(ALL_NOTES.length).toBeGreaterThan(15);

@@ -29,6 +29,11 @@ const PROCS: Proc[] = [
   { code: 'P-420', term: /spirometry/i, done: /test performed, fev|spirometry performed/i },
   { code: 'P-430', term: /strep/i, done: /rapid strep (swab )?performed/i },
 ];
+/** The finding each procedure treats; a visit finding outside this set is a separate problem (G6). */
+const PROC_DX: Record<string, string[]> = {
+  'P-210': ['D-106'], 'P-220': ['D-106'], 'P-310': ['D-107'], 'P-320': ['D-108'], 'P-330': ['D-114', 'D-110'],
+  'P-410': ['D-112'], 'P-420': ['D-109'], 'P-430': ['D-111'],
+};
 const WOUND = /Wound measured ([\d.]+) cm[^.]*?(single-layer|layered)/i;
 
 export function suggestCodes(raw: string): EngineResult {
@@ -89,7 +94,7 @@ export function suggestCodes(raw: string): EngineResult {
     if (ev) v = { code, evidence: ev, rule: 'G2', confidence: 'high', note: minutes === null ? 'Time not documented, default V-120' : undefined };
   }
   if (v) sug.push(v);
-  if (v && performed.length) sug.push({ code: 'M-25', evidence: v.evidence, rule: 'G6/HR-08', confidence: v.code === 'V-300' ? 'low' : 'high', note: 'Harborline denies the procedure unless the visit code carries M-25. Coder to confirm the problem is separate (G6).' });
+  const m25At = sug.length;
   sug.push(...procs);
 
   // --- findings (G4) ---
@@ -108,6 +113,15 @@ export function suggestCodes(raw: string): EngineResult {
   const wrist = find(/wrist/i); if (wrist && performed.some((p) => p.code === 'P-330')) add('D-114', wrist.s, wrist.i);
   const ankle = find(/ankle/i); if (ankle && performed.some((p) => p.code === 'P-330')) add('D-110', ankle.s, ankle.i);
   dx.sort((a, b) => a.idx - b.idx);
+
+  // --- M-25 (G6, HR-08): cite the problem the visit addressed apart from the procedure ---
+  if (v && performed.length) {
+    const procDx = new Set(performed.flatMap((p) => PROC_DX[p.code] ?? []));
+    const sep = dx.slice(0, 4).find((d) => !procDx.has(d.code));
+    sug.splice(m25At, 0, sep
+      ? { code: 'M-25', evidence: sep.evidence, rule: 'G6', confidence: 'high', note: `Visit addressed ${sep.code}, separate from the procedure. Harborline also requires M-25 here (HR-08).` }
+      : { code: 'M-25', evidence: v.evidence, rule: 'G6/HR-08', confidence: 'low', note: 'No problem separate from the procedure found, so G6 does not call for M-25; Harborline denies the procedure without it (HR-08). Coder to decide.' });
+  }
   if (dx.length > 4) warnings.push({ kind: 'no_dx', message: `More than four problems addressed; kept the first four (G4).` });
   for (const d of dx.slice(0, 4)) sug.push({ code: d.code, evidence: d.evidence, rule: 'G4', confidence: 'high' });
   if (!dx.length) warnings.push({ kind: 'no_dx', message: 'No problem recognised in the note. Needs a human or model read.' });
