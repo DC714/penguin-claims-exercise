@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { validateLlmCodes, modelLabel, pickModel } from '../validate';
 import { parseNote } from '../../engine/parse';
+import { buildPrompt } from '../escalatePrompt';
 
 const note = 'Member ID: M-1\nDate: 06/01/2026\nS/O: Office visit. Headache: tension-type pattern, neuro exam normal. Total face-to-face time: 20 minutes.';
 describe('validateLlmCodes', () => {
@@ -73,6 +74,18 @@ describe('validateLlmCodes (final review)', () => {
     ]);
     expect(r.accepted.map((a) => a.code)).toEqual(['P-320', 'V-150']);
     expect(r.rejected.map((x) => x.code)).toEqual(['P-310', 'V-300']);
+  });
+  it('F: procedure words in their usual forms count ("injected into joint space", "12-lead", "immobilizer")', () => {
+    const p = parseNote(H + 'S/O: Sterile prep, 40mg triamcinolone injected into joint space without difficulty. Knee immobilizer fitted today. 12-lead tracing reviewed in clinic.');
+    const r = validateLlmCodes(p.normalized, [], [
+      { code: 'P-310', quote: 'Sterile prep, 40mg triamcinolone injected into joint space without difficulty.' },
+      { code: 'P-330', quote: 'Knee immobilizer fitted today.' },
+      { code: 'P-410', quote: '12-lead tracing reviewed in clinic.' },
+    ]);
+    expect(r.accepted.map((a) => a.code)).toEqual(['P-310', 'P-330', 'P-410']);
+  });
+  it('the prompt asks for quotes of at least three words', () => {
+    expect(buildPrompt('x')).toMatch(/at least three words/);
   });
   it('F: M-95 is never accepted (G5)', () => {
     const p = parseNote(H + 'S/O: Video visit, patient at home. Hypertension, stable today.');

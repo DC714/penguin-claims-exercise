@@ -54,11 +54,15 @@ const PROC_DX: Record<string, string[]> = {
   'P-210': ['D-106'], 'P-220': ['D-106'], 'P-310': ['D-107'], 'P-320': ['D-108'], 'P-330': ['D-114', 'D-110'],
   'P-410': ['D-112'], 'P-420': ['D-109'], 'P-430': ['D-111'],
 };
-/** Words a quote must contain to support each procedure or special visit type (used to check model output). */
+/**
+ * Words a quote must contain to support each procedure or special visit type (used to check model output).
+ * Broader than the PROCS terms, which only locate negations: "injected into joint space" names a joint injection.
+ */
 export const EVIDENCE_TERMS: Readonly<Record<string, RegExp>> = {
-  ...Object.fromEntries(PROCS.map((p) => [p.code, p.term])),
   'P-210': /wound|laceration|closure|repair|sutur/i, 'P-220': /wound|laceration|closure|repair|sutur/i,
-  'V-150': TELE, 'V-200': WELL, 'V-300': URGENT,
+  'P-310': /inject|joint/i, 'P-320': /excis|remov|shave/i, 'P-330': /splint|immobiliz/i,
+  'P-410': /\becg\b|\bekg\b|12-lead|electrocardiogram/i, 'P-420': /spirometr|\bfev/i, 'P-430': /strep|swab/i,
+  'V-150': /video|telephone|phone|telehealth|virtual/i, 'V-200': /wellness|annual|preventive|physical/i, 'V-300': /same-day|walk(?:ed)?[- ]in|urgent|acute/i,
 };
 const WOUND = /Wound measured ([\d.]+) cm[^.]*?(single-layer|layered)/i;
 

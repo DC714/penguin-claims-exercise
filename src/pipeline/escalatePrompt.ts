@@ -16,7 +16,7 @@ RULES
 ${RULES}
 
 Respond with ONLY JSON, no prose: {"codes":[{"code":"V-120","quote":"<exact words copied from the note that support this code>"}]}
-Each quote must be copied verbatim from the note. Order: V- code, M- modifiers, P- codes, then D- codes with the main problem first.
+Each quote must be copied verbatim from the note and be at least three words long (quote the whole phrase, e.g. "Sore throat: erythematous pharynx", not just "Sore throat"). Order: V- code, M- modifiers, P- codes, then D- codes with the main problem first.
 
 <visit_note>
 ${note}
