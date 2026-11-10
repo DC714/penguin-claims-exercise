@@ -1,4 +1,4 @@
-const HEADER_START = /^(Member ID|Pt:|Patient:|Date\b|Provider:|S\/O:|A\/P:|Encounter #|DOS\b|Northgate Family Clinic)/;
+export const HEADER_START = /^(Member ID|Pt:|Patient:|Date\b|Provider:|S\/O:|A\/P:|Encounter #|DOS\b|Northgate Family Clinic)/;
 const HEADER_SENT = /^(Member ID|DOS\b|Seen by|Pt:|Patient:|Provider:|Date( of service)?:|Encounter #|Northgate Family Clinic)/;
 const SPLIT = /(?<!\b(?:Dr|Pt|approx|PA|NP|[A-Z])\.)(?<=\.)\s+(?=[A-Z(\[])/;
 
