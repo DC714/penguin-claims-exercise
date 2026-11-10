@@ -4,6 +4,34 @@
 - 2026-11-10: Manual v3.2 decides coding; Harborline bulletin produces warnings with a billable alternative.
 - 2026-11-10: Numeric dates are read as MM/DD/YYYY (US clinic; E-50019 sheet row order confirms).
 
+## Coder example review
+
+2026-11-10, `npm run compare` after the Task 6 engine fixes: 35 of 40 coded examples match exactly (V-150 counted as its billable form V-110 + M-95). Classes: (1) engine bug, (2) coder error per manual v3.2, (3) manual vs Harborline bulletin conflict.
+
+Disagreements:
+
+- E-50095: coder adds P-310; engine does not. Class 2. The note says the injection was discussed and the patient declined; G3 says a declined procedure is not coded. The coder's claim would also hit HR-01 (Bronze, no approval) and HR-08.
+- E-50063: coder adds P-310; engine does not. Class 2. Same declined-injection sentence as E-50095 (G3). The coder's claim would also hit HR-08.
+- E-50047: coder V-120, engine V-140. Class 2. The note documents 55 minutes; G2 makes 45+ minutes V-140, and HR-06 is met, so V-140 is payable.
+- E-50028: coder V-120, engine V-130. Class 2. The note documents 40 minutes; G2 makes 30 to 44 minutes V-130 (HR-06 met).
+- E-50236: engine adds M-25 (low confidence, escalated); coder omits it. Class 3 (HR-08). The rapid strep test is for the sore throat the urgent visit addressed, so G6 does not call for M-25 and the coder followed the manual; Harborline HR-08 denies P-430 on a claim with a V- code and no M-25. Needs a clinic decision; the engine surfaces both readings.
+
+Codes differ but treated as equivalent:
+
+- E-50266, E-50165, E-50160: coder V-110 + M-95, engine V-150. Class 3 (HR-02). G5 says V-150 and no M-95; HR-02 refuses V-150 and asks for V-110 + M-95. The coders used the bulletin form here.
+- E-50139, E-50035, E-50782, E-50079, E-50350: coder and engine both V-150 (manual form); the coder's claim would hit HR-02. Class 3. Coders are split 3 vs 5 on telehealth, which the telehealth brief should raise.
+
+Matching examples whose claim would still be denied (no coding disagreement):
+
+- E-50134: P-320 on a Bronze member with no approval on file (HR-01).
+- E-50280 and E-50282: same member, same date, two V- codes across two encounters (HR-03); the clinic should confirm whether these were one visit. E-50063 also shares a date with E-50082 (HR-03).
+
+## Task 6 sweep notes
+
+- Two roster members share the name and date of birth used by E-50687 and E-51005 (different member IDs and plans). Name + DOB cannot choose between them, so both stay unresolved and escalated rather than guessed.
+- Same note exported twice: 6 encounters are in both the xlsx and the PDF batch, and 3 more pairs carry different encounter IDs for one note (E-51008/E-50542, E-50363/E-51011, E-50294/E-51014). The second copy read (PDF, or the higher row) is marked duplicate and excluded from HR-03/HR-07 lookups.
+- M-25 now cites the sentence of the separate problem (G6) and is high confidence only when such a problem exists; when the procedure treats the only problem addressed, M-25 is low confidence and escalated (HR-08 conflict above).
+
 ## Next.js version notes
 
 Installed: next 16.4.6 (docs read from `node_modules/next/dist/docs/01-app`). Scaffold sets `cacheComponents: true` and `partialPrefetching: true` in `next.config.ts`.
