@@ -13,6 +13,8 @@
     "escalate": "tsx --env-file=.env.local scripts/escalate.ts"
   },
   "dependencies": {
+    "@mantine/core": "^9.8.0",
+    "@mantine/hooks": "^9.8.0",
     "@neondatabase/serverless": "^1.2.0",
     "csv-parse": "^7.0.3",
     "exceljs": "^4.4.0",
@@ -22,13 +24,11 @@
     "unpdf": "^2.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
-    "tailwindcss": "4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.1.0"
