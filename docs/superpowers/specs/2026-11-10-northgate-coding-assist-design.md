@@ -15,7 +15,7 @@ review before billing. Time budget: about 3h35m from spec approval.
 
 | Topic | Decision |
 |---|---|
-| Extraction | Deterministic rules first. An LLM handles only low-confidence visits, run locally through Dave's Claude Code subscription (`claude -p`). No API key in the hosted app. |
+| Extraction | Deterministic rules first. An LLM handles only low-confidence visits, run locally through the candidate's own Claude Code subscription (`claude -p`). No API key in the hosted app. |
 | Hosting | GitHub repo, Next.js on Vercel, Neon Postgres. Inngest deferred (needs an API key; out of scope for this pass). |
 | Authority on conflicts | The Northgate manual decides what to code. Harborline rules produce warnings with a billable alternative. |
 | Telehealth | Suggest V-150 (manual G5). Flag HR-02 and offer "billable form: V-110 + M-95". |

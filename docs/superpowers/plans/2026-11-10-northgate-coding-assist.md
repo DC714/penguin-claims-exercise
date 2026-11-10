@@ -56,7 +56,7 @@ docs/decision-log.md, README.md, docs/telehealth-brief.md
 - [ ] **Step 1: Scaffold Next.js into the existing repo**
 
 ```bash
-cd /Users/home/Downloads/candidate_pack/northgate-coding-assist
+cd <repo>
 npx create-next-app@latest . --ts --app --src-dir --tailwind --eslint --use-npm --import-alias "@/*" --yes
 ```
 Expected: app created; `docs/` untouched. If it refuses because the directory is non-empty, move `docs/` to `/tmp/docs-bak`, scaffold, move it back.
@@ -96,7 +96,7 @@ Append to `.gitignore`: `.env*.local` and `.env`. Create `docs/decision-log.md`:
 ```md
 # Decision log
 
-- 2026-11-10: Rules-first extraction, LLM only for low-confidence visits via `claude -p` (Dave's subscription). Source label stored per suggestion for model comparison.
+- 2026-11-10: Rules-first extraction, LLM only for low-confidence visits via `claude -p` (the candidate's own Claude subscription). Source label stored per suggestion for model comparison.
 - 2026-11-10: Manual v3.2 decides coding; Harborline bulletin produces warnings with a billable alternative.
 - 2026-11-10: Numeric dates are read as MM/DD/YYYY (US clinic; E-50019 sheet row order confirms).
 ```
@@ -794,8 +794,8 @@ export function bodyKey(sentences: string[]): string {
 
 ```bash
 cat > /tmp/smoke.ts <<'EOF'
-import { loadXlsx, loadPdfs, loadRoster } from '/Users/home/Downloads/candidate_pack/northgate-coding-assist/src/ingest/load';
-const D = '/Users/home/Downloads/candidate_pack/customer_materials';
+import { loadXlsx, loadPdfs, loadRoster } from '../src/ingest/load';
+const D = '../customer_materials';
 const x = await loadXlsx(`${D}/visits_export_2026-10-20.xlsx`);
 const p = await loadPdfs(`${D}/notes_pdf_batch2`);
 const r = await loadRoster(`${D}/harborline_member_roster.csv`);
@@ -971,10 +971,10 @@ Expected: a short list of disagreements plus the summary. Review every disagreem
 Write the classified list into `docs/decision-log.md` under "Coder example review". Also sweep all 260 notes for leftovers:
 ```bash
 cat > /tmp/sweep.ts <<'EOF'
-import { loadXlsx, loadPdfs, loadRoster } from '/Users/home/Downloads/candidate_pack/northgate-coding-assist/src/ingest/load';
-import { buildRecords } from '/Users/home/Downloads/candidate_pack/northgate-coding-assist/src/pipeline/world';
-import { claimCodes } from '/Users/home/Downloads/candidate_pack/northgate-coding-assist/src/engine/suggest';
-const D = '/Users/home/Downloads/candidate_pack/customer_materials';
+import { loadXlsx, loadPdfs, loadRoster } from '../src/ingest/load';
+import { buildRecords } from '../src/pipeline/world';
+import { claimCodes } from '../src/engine/suggest';
+const D = '../customer_materials';
 const { visits } = await loadXlsx(`${D}/visits_export_2026-10-20.xlsx`);
 const recs = buildRecords([...visits, ...(await loadPdfs(`${D}/notes_pdf_batch2`))], await loadRoster(`${D}/harborline_member_roster.csv`));
 for (const r of recs.filter((r) => r.needsEscalation && !r.duplicateOf)) console.log(r.encId, claimCodes(r.suggestions).join(','), '|', r.warnings.map((w) => w.kind).join(','), '|', r.note.replace(/\n/g, ' / ').slice(0, 220));
@@ -997,13 +997,13 @@ Expected: escalation list is short (the 7 injection notes plus unresolved member
 
 - [ ] **Step 1: Create the Neon database (needs the user)**
 
-`neonctl` is installed and logged in (davecontreras714@gmail.com; `neonctl me` confirms). Create a new project and write the pooled connection string to `.env.local`:
+`neonctl` is installed and logged in (`neonctl me` confirms). Create a new project and write the pooled connection string to `.env.local`:
 ```bash
 neonctl projects create --name northgate-coding-assist
 neonctl connection-string --project-id <id-from-previous-output> --pooled > /tmp/neon-url.txt
 printf 'DATABASE_URL=%s\n' "$(cat /tmp/neon-url.txt)" > .env.local && rm /tmp/neon-url.txt
 ```
-If `neonctl me` reports "Projects Limit 0" and creation fails, fall back to creating the project in the Neon console in the logged-in Chrome (Browser for davecontreras714), then copy the pooled URL into `.env.local`. Never print the URL in chat or commit it.
+If `neonctl me` reports "Projects Limit 0" and creation fails, fall back to creating the project in the Neon console, then copy the pooled URL into `.env.local`. Never print the URL in chat or commit it.
 Verify: `npx tsx --env-file=.env.local -e "import {neon} from '@neondatabase/serverless'; console.log(await neon(process.env.DATABASE_URL!)\`select 1 as ok\`)"` — Expected: `[ { ok: 1 } ]`.
 
 - [ ] **Step 2: Write `db/schema.sql`**
@@ -1096,10 +1096,10 @@ Expected: rows for HR-01, HR-02, HR-03, HR-08 and WARN-* at minimum.
 
 ### UI addendum for Tasks 8 and 9 (supersedes the Tailwind JSX below): Mantine + Penguin AI branding
 
-Dave asked for the Penguin AI look (penguinai.co) and Mantine. The JSX in Tasks 8 and 9 shows structure and data only; implement it with Mantine components (`AppShell`, `Table`, `Badge`, `Card`, `Group`, `Stack`, `Alert`, `Button`, `Mark`, `Text`, `Anchor`, `Title`, `Tabs`/`SimpleGrid`) instead of Tailwind classes. Rules:
+The brief asks for the Penguin AI look (penguinai.co) and Mantine. The JSX in Tasks 8 and 9 shows structure and data only; implement it with Mantine components (`AppShell`, `Table`, `Badge`, `Card`, `Group`, `Stack`, `Alert`, `Button`, `Mark`, `Text`, `Anchor`, `Title`, `Tabs`/`SimpleGrid`) instead of Tailwind classes. Rules:
 - **Remove Tailwind** (the scaffold added it; its preflight fights Mantine): uninstall `tailwindcss` and `@tailwindcss/postcss`, delete the `turbopack.rules` tailwind loader block in `next.config.ts` and `postcss.config.mjs` if present, and strip the tailwind `@import`/`@theme` lines from `src/app/globals.css`. Keep `cacheComponents` as is.
-- **Install:** `npm i @mantine/core @mantine/hooks` (same major as `/Users/home/Downloads/Claude_Projects/penguin-demo`, which uses ^9.7.3 with Next 16).
-- **Theme:** copy `/Users/home/Downloads/Claude_Projects/penguin-demo/src/theme.ts` to `src/theme.ts`. It encodes the penguinai.co tokens (verified against the live site 2026-11-10): primary pink `#fe017d` (hover `#d6016a`), deep teal `#05526d`, text `#1a1a1a`, cream `#f9f7f2`, slate `#45556c`; headings Outfit (600-800), body Public Sans. Load both fonts with `next/font/google` as CSS variables `--font-outfit` and `--font-public-sans` on `<html>`, wrap the app in `MantineProvider theme={theme}` and import `@mantine/core/styles.css` (follow the layout in `penguin-demo/src/app/layout.tsx`). Use `ColorSchemeScript` only if the demo does; default to light with cream `#f9f7f2` page background.
+- **Install:** `npm i @mantine/core @mantine/hooks` (same major as the demo theme: ^9.7.3 with Next 16).
+- **Theme:** write `src/theme.ts` from the demo theme. It encodes the penguinai.co tokens (verified against the live site 2026-11-10): primary pink `#fe017d` (hover `#d6016a`), deep teal `#05526d`, text `#1a1a1a`, cream `#f9f7f2`, slate `#45556c`; headings Outfit (600-800), body Public Sans. Load both fonts with `next/font/google` as CSS variables `--font-outfit` and `--font-public-sans` on `<html>`, wrap the app in `MantineProvider theme={theme}` and import `@mantine/core/styles.css` (follow the demo's layout). Use `ColorSchemeScript` only if the demo does; default to light with cream `#f9f7f2` page background.
 - **Semantics:** pink = primary actions and the accent; deep teal for headers/nav text and "source" badges; red (Mantine `red`) for denial risks, yellow for warnings, green for accepted. Evidence highlighting uses Mantine `Mark` (light pink `#ffd9ec`).
 - **Header:** `AppShell.Header` with the text wordmark "Northgate Coding Assist" in Outfit plus a small muted "pilot review build" label and nav links Queue / Coder comparison. Do not copy Penguin AI's logo or imply the app is a Penguin AI product.
 - **Next 16 Cache Components:** do NOT export `dynamic`; put each DB-reading component in its own async component wrapped in `<Suspense fallback={...}>`; `params`/`searchParams` are Promises (see `docs/decision-log.md` "Next.js version notes"). Server actions stay `'use server'` functions used with `<form action>`; Mantine `Button` supports `type="submit"` with `name`/`value`.
@@ -1520,7 +1520,7 @@ Expected: three lines like `E-50114 sonnet-5.5 V-120,D-115`, injection quotes re
 
 - [ ] **Step 1: GitHub**
 
-Use the existing repo `https://github.com/DC714/penguin-claims-exercise` (gh is logged in as DC714). It currently holds only an "Initial commit" with a README, and it is **public**: confirm with Dave that public is intended before pushing, since the code and decision log will be visible. Never commit `.env*`, the customer data, or the note PDFs.
+Use the existing repo `https://github.com/DC714/penguin-claims-exercise` (gh is logged in as DC714). It currently holds only an "Initial commit" with a README, and it is **public**: confirm that public is intended before pushing, since the code and decision log will be visible. Never commit `.env*`, the customer data, or the note PDFs.
 ```bash
 git remote add origin https://github.com/DC714/penguin-claims-exercise.git
 git fetch origin
@@ -1529,7 +1529,7 @@ git push -u origin main
 ```
 Expected: `main` pushed with history intact. Do not force-push.
 
-- [ ] **Step 2: Vercel** (`vercel whoami` is currently logged out: ask Dave to run `vercel login` once, or complete the browser login in the logged-in Chrome)
+- [ ] **Step 2: Vercel** (`vercel whoami` is currently logged out: the operator runs `vercel login` once)
 
 ```bash
 vercel link --yes
@@ -1553,7 +1553,7 @@ Cover: what it does, live URL, how to run (`npm i`, `.env.local` with `DATABASE_
 
 - [ ] **Step 2: Decision log**
 
-Ensure it contains: rules-first rationale; manual-vs-bulletin policy; MM/DD date reading; injected-instruction handling; duplicate handling (same member, date, text); name+DOB member matching; M-25 low-confidence rule (G6 vs HR-08); coverage-date warning (not an HR rule); the classified list of coder example disagreements from Task 6; `claude -p` as the LLM path and the README line about API keys (Dave to confirm with Penguin AI that subscription use is acceptable); what was cut (Inngest, work-queue API, auth).
+Ensure it contains: rules-first rationale; manual-vs-bulletin policy; MM/DD date reading; injected-instruction handling; duplicate handling (same member, date, text); name+DOB member matching; M-25 low-confidence rule (G6 vs HR-08); coverage-date warning (not an HR rule); the classified list of coder example disagreements from Task 6; `claude -p` as the LLM path and the README line about API keys (flag for Penguin AI to confirm that subscription use is acceptable); what was cut (Inngest, work-queue API, auth).
 
 - [ ] **Step 3: Telehealth brief (`docs/telehealth-brief.md`)**
 
