@@ -12,7 +12,7 @@ It is a pilot-review build for the "Code the Encounters" exercise. All clinic, i
 - **Denial checks.** `src/engine/denials.ts` applies Harborline rules HR-01 to HR-08 deterministically. Each flag states why, and where possible gives a billable fix (for example, V-150 becomes V-110 + M-95 under HR-02).
 - **Model for hard visits.** Visits the rules cannot settle confidently (12 of 251) are escalated to a model through the Claude Code CLI (`claude -p`). Results are stored under a `source` label such as `sonnet-5.5`, beside `rules-v1`, so models can be compared side by side on the visit page.
 - **Storage.** Neon Postgres (`db/schema.sql`). The deployed app only reads results and saves accept/reject decisions.
-- **UI.** Next.js 16 with Mantine. Pages: review queue, visit page with highlighted evidence, and a comparison against the 40 coder examples.
+- **UI.** Next.js 16 with Mantine. Pages: review queue (clickable summary tiles and rule badges, date range and provider filters, all kept in the URL so a filtered view can be shared), visit page with highlighted evidence and denial risks shown first, a comparison against the 40 coder examples, and the full Northgate coding manual and Harborline bulletin as searchable pages. Every rule badge in the app links to its rule text.
 
 Where the manual and the bulletin disagree, the manual decides the suggestion and the bulletin produces a flag with a billable alternative. See `docs/decision-log.md`.
 
