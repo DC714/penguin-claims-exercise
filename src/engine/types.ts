@@ -7,5 +7,9 @@ export interface ParsedNote { normalized: string; memberId?: string; patientName
 export interface EngineResult { suggestions: Suggestion[]; notCoded: NotCoded[]; warnings: Warning[]; minutes: number | null; needsEscalation: boolean }
 export interface PriorAuth { authNo: string; memberId: string; code: string; approved: string; expires: string }
 export interface OtherVisit { encId: string; dos: string; codes: string[] }
-export interface DenialCtx { plan?: Plan; dos: string; memberId?: string; minutes: number | null; priorAuths: PriorAuth[]; otherVisits: OtherVisit[] }
+export interface DenialCtx {
+  plan?: Plan; dos: string; memberId?: string; minutes: number | null; priorAuths: PriorAuth[];
+  /** The member's OTHER encounters. Callers MUST exclude the encounter being checked, or HR-03/HR-07 fire against itself. */
+  otherVisits: OtherVisit[];
+}
 export interface Flag { ruleId: string; why: string; fix: string }

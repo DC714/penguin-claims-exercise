@@ -7,17 +7,23 @@ const DX: Array<[RegExp, string]> = [
   [/^asthma\b/i, 'D-109'], [/^ankle sprain\b/i, 'D-110'], [/^sore throat\b/i, 'D-111'], [/^chest pain\b/i, 'D-112'],
   [/^headache\b/i, 'D-115'], [/^medication (refill|management)\b/i, 'D-116'],
 ];
-const TIME = /\b(\d{1,3})\s*(?:minutes|minuets|min|m)\b/i;
+const TIME = /(?<![\d.])\b(\d{1,3})\s*(?:minutes|minuets|min|m)\b/i;
+const TIME_CTX = /time|spent|face-to-face|duration|total|\(\d+ ?min\)/i;
+// Mentions of a visit type that are not the visit being coded (discussion, history, future).
+const NOT_THIS_VISIT = /\b(discuss\w*|offer\w*|prefer\w*|consider\w*|last|prior|previous|next|future|will)\b/i;
 const TELE = /\b(video visit|telephone visit|telehealth|virtual care|phone visit)\b/i;
 const WELL = /\b(annual wellness|yearly physical|preventive exam|wellness visit|wellness vist)\b/i;
 const URGENT = /\b(same-day add-on|walked in with acute|walk-in)\b/i;
 const PURPOSE = /^(?:patient )?here for (?:a )?(?:scheduled|removal)|^scheduled (?:ecg|spirometry)|^walk-in for laceration/i;
-const NEG = /\b(discus+ed|offered|recommended|declin\w*|ordered|will reconsider)\b/i;
+const NEG_WORD = '(?:declin|offered|discus+|recommend|order|will reconsider)';
+/** Procedure not performed: a negation shortly before a performed-verb ("No injection performed", "ECG not obtained"). */
+const NEGATED = /\b(no|not|never|without|deferred|unable|refused|did not|was not)\b[^.]{0,30}(performed|given|applied|obtained|injected|done)/i;
+const negNear = (term: RegExp) => new RegExp(`${NEG_WORD}\\w*[^.]{0,40}(?:${term.source})|(?:${term.source})[^.]{0,40}(?:declin|recommend|order|offered)`, 'i');
 
 interface Proc { code: string; term: RegExp; done: RegExp; partial?: RegExp }
 const PROCS: Proc[] = [
   { code: 'P-310', term: /injection/i, done: /injected into (the )?joint|performed .{0,40}injection|injection (was )?(performed|given)/i, partial: /injection attempted|stopped before medication/i },
-  { code: 'P-320', term: /lesion|excision/i, done: /shave excision performed|removed an? [\d.]+ mm lesion/i, partial: /removal started|halted after partial/i },
+  { code: 'P-320', term: /excision|removal|remov\w*/i, done: /shave excision performed|removed an? [\d.]+ mm lesion/i, partial: /removal started|halted after partial/i },
   { code: 'P-330', term: /splint/i, done: /splint applied/i },
   { code: 'P-410', term: /\becg\b/i, done: /(12-lead|ecg) obtained/i },
   { code: 'P-420', term: /spirometry/i, done: /test performed, fev|spirometry performed/i },
@@ -35,35 +41,43 @@ export function suggestCodes(raw: string): EngineResult {
 
   // --- procedures (G3, G7) ---
   const procs: Suggestion[] = [];
-  const procSentence: Record<string, string> = {};
+  const skipped: NotCoded[] = [];
   for (const s of S) {
+    const negated = NEGATED.test(s);
     for (const p of PROCS) {
       if (procs.some((x) => x.code === p.code)) continue;
-      if (p.done.test(s)) { procs.push({ code: p.code, evidence: s, rule: 'G3', confidence: 'high' }); procSentence[p.code] = s; }
+      if (negated) {
+        if (p.term.test(s)) skipped.push({ code: p.code, evidence: s, reason: 'Negated: procedure not performed (G3)' });
+      } else if (p.done.test(s)) procs.push({ code: p.code, evidence: s, rule: 'G3', confidence: 'high' });
       else if (p.partial?.test(s)) {
-        procs.push({ code: p.code, evidence: s, rule: 'G3', confidence: 'high' }); procSentence[p.code] = s;
+        procs.push({ code: p.code, evidence: s, rule: 'G3', confidence: 'high' });
         procs.push({ code: 'M-52', evidence: s, rule: 'G7', confidence: 'high', note: `Started but not completed (${p.code})` });
-      } else if (p.term.test(s) && NEG.test(s) && !notCoded.some((n) => n.code === p.code))
-        notCoded.push({ code: p.code, evidence: s, reason: 'Discussed, offered, recommended or declined, not performed (G3)' });
+      } else if (negNear(p.term).test(s))
+        skipped.push({ code: p.code, evidence: s, reason: 'Discussed, offered, recommended or declined, not performed (G3)' });
     }
     const w = s.match(WOUND);
-    if (w && !procs.some((x) => x.code === 'P-210' || x.code === 'P-220')) {
+    if (w && !negated && !procs.some((x) => x.code === 'P-210' || x.code === 'P-220')) {
       const code = +w[1] > 5 || /layered/i.test(w[2]) ? 'P-220' : 'P-210';
-      procs.push({ code, evidence: s, rule: 'G3', confidence: 'high' }); procSentence[code] = s;
+      procs.push({ code, evidence: s, rule: 'G3', confidence: 'high' });
     }
   }
+  // Only report codes that were not performed elsewhere in the note; first sentence per code.
+  for (const n of skipped) if (!procs.some((x) => x.code === n.code) && !notCoded.some((x) => x.code === n.code)) notCoded.push(n);
   const performed = procs.filter((p) => p.code.startsWith('P-'));
 
   // --- time ---
   let minutes: number | null = null; let timeSentence: string | undefined;
-  for (const s of S) { const m = s.match(TIME); if (m) { minutes = +m[1]; timeSentence = s; break; } }
+  const timeSents = S.filter((s) => TIME_CTX.test(s) && TIME.test(s));
+  const ts = timeSents[0] ?? S.find((s) => TIME.test(s));
+  if (ts) { minutes = +ts.match(TIME)![1]; timeSentence = ts; }
 
   // --- visit code (G1, G2, G5, G6, G8, G9) ---
-  const tele = S.find((s) => TELE.test(s));
-  const well = S.find((s) => WELL.test(s));
+  const ctx = (re: RegExp) => S.find((s) => re.test(s) && !NOT_THIS_VISIT.test(s));
+  const tele = ctx(TELE);
+  const well = ctx(WELL);
   const purpose = S.find((s) => PURPOSE.test(s));
   const noOther = S.some((s) => /no other problems addressed/i.test(s));
-  const urgent = S.find((s) => URGENT.test(s));
+  const urgent = ctx(URGENT);
   let v: Suggestion | null = null;
   if (tele) v = { code: 'V-150', evidence: tele, rule: 'G5', confidence: 'high', note: 'Harborline denies V-150 (HR-02); billable form is V-110 + M-95' };
   else if (well) v = { code: 'V-200', evidence: well, rule: 'G8', confidence: 'high' };

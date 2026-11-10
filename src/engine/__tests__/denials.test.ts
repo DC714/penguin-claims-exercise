@@ -48,4 +48,21 @@ describe('checkDenials', () => {
     expect(ids(['V-120', 'P-430', 'D-111'], base())).toContain('HR-08');
     expect(ids(['V-120', 'M-25', 'P-430', 'D-111'], base())).not.toContain('HR-08');
   });
+  it('HR-01 boundaries: approved == dos and expires == dos are valid', () => {
+    const a = (o: object) => base({ plan: 'Bronze', memberId: 'M-1', dos: '2026-08-01', priorAuths: [{ authNo: 'PA-1', memberId: 'M-1', code: 'P-320', approved: '2026-08-01', expires: '2026-09-01', ...o }] });
+    expect(ids(['P-320'], a({}))).toEqual([]);
+    expect(ids(['P-320'], a({ approved: '2026-07-01', expires: '2026-08-01' }))).toEqual([]);
+    expect(ids(['P-320'], a({ approved: '2026-08-02' }))).toEqual(['HR-01']);
+  });
+  it('HR-01 cites the approval nearest the date of service', () => {
+    const pa = (authNo: string, approved: string, expires: string) => ({ authNo, memberId: 'M-1', code: 'P-320', approved, expires });
+    const ctx = base({ plan: 'Bronze', memberId: 'M-1', dos: '2026-08-01', priorAuths: [pa('PA-OLD', '2025-01-01', '2025-02-01'), pa('PA-NEAR', '2026-06-01', '2026-07-20')] });
+    expect(checkDenials(['P-320'], ctx)[0].why).toMatch(/PA-NEAR/);
+  });
+  it('HR-03: another same-day visit with no V code does not trigger', () => {
+    expect(ids(['V-120', 'D-101'], base({ otherVisits: [{ encId: 'E-1', dos: '2026-08-01', codes: ['P-430', 'D-111'] }] }))).not.toContain('HR-03');
+  });
+  it('HR-08: V-150 with a P- code triggers', () => {
+    expect(ids(['V-150', 'P-430', 'D-111'], base())).toContain('HR-08');
+  });
 });

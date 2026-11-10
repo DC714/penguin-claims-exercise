@@ -1,5 +1,5 @@
 import { daysBetween } from './dates';
-import type { DenialCtx, Flag } from './types';
+import type { DenialCtx, Flag, PriorAuth } from './types';
 
 const isV = (c: string) => c.startsWith('V-');
 const isP = (c: string) => c.startsWith('P-');
@@ -23,7 +23,9 @@ export function checkDenials(codes: string[], ctx: DenialCtx): Flag[] {
       const mine = ctx.priorAuths.filter((a) => a.memberId === ctx.memberId && a.code === p);
       if (mine.some((a) => a.approved <= ctx.dos && ctx.dos <= a.expires)) continue;
       let why = `${p} on a Bronze plan needs prior authorization; none on file for ${ctx.memberId}.`;
-      const a = mine[0];
+      // nearest approval to the date of service (0 when inside the window)
+      const gap = (x: PriorAuth) => (ctx.dos < x.approved ? daysBetween(ctx.dos, x.approved) : ctx.dos > x.expires ? daysBetween(x.expires, ctx.dos) : 0);
+      const a = [...mine].sort((x, y) => gap(x) - gap(y))[0];
       if (a) why = a.expires < ctx.dos
         ? `${a.authNo} for ${p} expired ${a.expires}, before date of service ${ctx.dos}.`
         : `${a.authNo} for ${p} was approved ${a.approved}, after date of service ${ctx.dos}.`;
