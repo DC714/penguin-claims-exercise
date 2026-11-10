@@ -1,0 +1,8 @@
+[
+  { "authNo": "PA-734965", "memberId": "M-101390", "code": "P-320", "approved": "2026-05-24", "expires": "2026-10-04" },
+  { "authNo": "PA-789742", "memberId": "M-100446", "code": "P-310", "approved": "2026-06-06", "expires": "2026-10-01" },
+  { "authNo": "PA-733694", "memberId": "M-100275", "code": "P-310", "approved": "2026-06-15", "expires": "2026-09-06" },
+  { "authNo": "PA-735688", "memberId": "M-100264", "code": "P-320", "approved": "2026-07-21", "expires": "2026-10-16" },
+  { "authNo": "PA-778156", "memberId": "M-100762", "code": "P-310", "approved": "2026-08-11", "expires": "2026-11-29" },
+  { "authNo": "PA-796722", "memberId": "M-100775", "code": "P-320", "approved": "2026-09-10", "expires": "2026-10-14" }
+]
