@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "compare": "tsx --env-file=.env.local scripts/compare.ts",
+    "compare": "tsx scripts/compare.ts",
     "ingest": "tsx --env-file=.env.local scripts/ingest.ts",
     "escalate": "tsx --env-file=.env.local scripts/escalate.ts"
   },
