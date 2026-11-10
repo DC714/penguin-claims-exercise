@@ -98,3 +98,7 @@ An independent whole-branch review found no data-layer or denial-logic defects b
 - HR-08 on low-confidence M-25: for E-50236 and E-50743 the M-25 stays in the suggestions, but a denial-kind HR-08 flag is also raised, so these two visits count as likely denials. The likely-denial total went from 51 to 53. The 35/40 coder match is unchanged, and no rules-v1 code changed on any of the 260 records.
 
 Not changed: M-25 confidence for ordinary visit-plus-procedure claims, the `PURPOSE` wording list (it covers this export's templates only), hours as a time unit ("1 hr" falls back to V-120; none in the data), and the HR-03 assumption that callers exclude the current encounter (both callers do).
+
+## Provider read from the note text (found in review of the live app)
+
+The 50 visits that came from the PDF batch had no provider in the app (and so could not be found with the provider filter), because the provider was only read from the spreadsheet's Provider column and PDFs have no such column. `parseNote` now reads it from the note text (`Provider:`, `Seen by`, or the `| NP J. Whitaker` header tail), and the spreadsheet column is used first when present. Checked on all 260 notes: the text names a provider in every one, and it equals the spreadsheet column on all 210 spreadsheet visits. Other fields were audited at the same time: member id is empty only for the two shared name-and-date-of-birth visits, the date of service is always present, and the patient name and minutes are empty only where the note does not state them.
