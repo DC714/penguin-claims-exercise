@@ -106,3 +106,9 @@ The 50 visits that came from the PDF batch had no provider in the app (and so co
 ## Member warning for name-only matches
 
 When a note has no member number and no birth date and the member was matched to the roster by name alone (5 visits: E-50027, E-50187, E-50691, E-50729, E-50948), the visit now carries a `WARN-MEMBER` warning that names the matched member, birth date and plan and asks Northgate to confirm the birth date or member number before billing. Name-and-date-of-birth matches (7 visits) do not carry it. The two visits matching two roster members (E-50687, E-51005) keep their existing unmatched-member warning.
+
+## Typography matched to penguinai.co
+
+- Measured (computed styles, 2026-11-10): penguinai.co uses Outfit 800 for H1/H2 at line-height 1.05 in ink #1a1a1a, Outfit 400 14px/1.625 body in rgba(26,26,26,0.6), and a Public Sans 700 12px uppercase eyebrow tracked 0.28em in #d6016a. The app had Outfit 600 teal titles, Public Sans body text and untracked gray tile labels.
+- Changed: body and table text are Outfit 400 14px/22.75px in #333333; headings are Outfit 800 (h3 700) in ink at line-height 1.05 to 1.2; helper text is 12px/1.625; tile labels and a new eyebrow above each page title use the site's eyebrow style; table headers are Outfit 700 11px uppercase tracked 0.08em; numbers in tables use tabular figures; nav links and the brand stay Outfit.
+- Deliberate differences: (1) compact heading scale (h1 40px, h2 28px, h3 20px, about 20% smaller under 480px) instead of the site's 72px/60px hero sizes, which do not belong on a data screen; (2) Public Sans is kept for uppercase eyebrows and badges, where its tracking holds up at 11 to 12px; (3) helper text is ink at 0.65 alpha, not 0.6, because 0.6 measures about 4.4:1 on the cream page background (4.5:1 is the minimum); (4) eyebrow tracking drops to 0.12em under 480px.

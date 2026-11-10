@@ -12,13 +12,14 @@ export default function Page() {
         Source: Harborline Health Plan Provider Bulletin 2026-07 (provided by the clinic). These rules produce warnings in this tool; coding follows the Northgate manual.
       </Alert>
       <Stack gap={2}>
-        <Title order={1} c="deep.6">{BULLETIN.title}</Title>
+        <div className="eyebrow">Reference</div>
+      <Title order={1}>{BULLETIN.title}</Title>
         <Text fw={600} ff="var(--font-outfit), sans-serif" fz="lg">{BULLETIN.subtitle}</Text>
-        <Text size="sm" c="dimmed">{BULLETIN.meta}</Text>
+        <Text size="xs" c="dimmed">{BULLETIN.meta}</Text>
       </Stack>
       <Text>{BULLETIN.intro}</Text>
       <BulletinView />
-      <Text size="sm" c="dimmed">{BULLETIN.closing}</Text>
+      <Text size="xs" c="dimmed">{BULLETIN.closing}</Text>
     </Stack>
   );
 }

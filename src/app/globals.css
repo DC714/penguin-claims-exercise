@@ -7,3 +7,19 @@ tr.row { position: relative; }
 .manual-anchor:target { background: var(--mantine-color-brand-0); outline: 2px solid var(--mantine-color-brand-6); outline-offset: -2px; }
 /* links inside a clickable row sit above the row's overlay link */
 tr.row .rule-link { position: relative; z-index: 1; }
+/* Body text #333333; helper text is ink at 0.65 alpha (0.6 gives 4.4:1 on the cream #f9f7f2 page, below the 4.5:1 minimum). */
+:root:root[data-mantine-color-scheme="light"] { --mantine-color-text: #333333; --mantine-color-dimmed: rgba(26, 26, 26, 0.65); }
+/* Typography matched to penguinai.co (see docs/decision-log.md). */
+table td, table th, .tnum { font-variant-numeric: tabular-nums; }
+.mantine-Table-th {
+  font-family: var(--font-outfit), sans-serif; font-weight: 700; font-size: 11px; line-height: 1.4;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--mantine-color-dimmed);
+}
+.eyebrow {
+  font-family: var(--font-public-sans), sans-serif; font-weight: 700; font-size: 12px; line-height: 16px;
+  text-transform: uppercase; letter-spacing: 0.28em; color: #d6016a;
+}
+@media (max-width: 480px) {
+  :root:root { --mantine-h1-font-size: 32px; --mantine-h2-font-size: 22px; --mantine-h3-font-size: 17px; }
+  .eyebrow { letter-spacing: 0.12em; }
+}

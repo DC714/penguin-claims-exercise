@@ -13,7 +13,8 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 export default function Page({ searchParams }: { searchParams: SP }) {
   return (
     <Stack gap="md" py="md">
-      <Title order={1} c="deep.6">Review queue</Title>
+      <div className="eyebrow">Pilot review</div>
+      <Title order={1}>Review queue</Title>
       <Suspense fallback={<Center py="xl"><Loader color="brand" /></Center>}>
         <Queue searchParams={searchParams} />
       </Suspense>
@@ -77,7 +78,7 @@ async function Queue({ searchParams }: { searchParams: SP }) {
         <StatTile href={tile({ filter: "review" })} label="Needs review" value={totals.review} color="yellow.8" active={f.filter === "review"} ariaLabel={`Show visits that need review, ${totals.review}`} />
       </SimpleGrid>
       <Group gap="xs">
-        <Text size="sm" c="dimmed">Denial risks by rule:</Text>
+        <Text size="xs" c="dimmed">Denial risks by rule:</Text>
         {ruleRows.map((r) => {
           const on = f.rule === r.rule_id;
           return (
@@ -101,7 +102,7 @@ async function Queue({ searchParams }: { searchParams: SP }) {
           <LinkAnchor href="/" size="sm">Clear all filters</LinkAnchor>
         </Group>
       )}
-      <Text size="sm" c="dimmed" aria-live="polite">
+      <Text size="xs" c="dimmed" aria-live="polite">
         <b>{filtered ? `${rows.length} of ${totals.visits}` : rows.length}</b> visits{what}. Likely denials first; duplicate notes are hidden.
       </Text>
       <Card p={0}>
@@ -113,7 +114,7 @@ async function Queue({ searchParams }: { searchParams: SP }) {
             <TableTbody>
               {rows.map((r) => (
                 <TableTr key={r.enc_id} className="row">
-                  <TableTd><LinkAnchor href={visitHref(r.enc_id)} className="row-link" fw={600}>{r.enc_id}</LinkAnchor></TableTd>
+                  <TableTd><LinkAnchor href={visitHref(r.enc_id)} className="row-link" fw={600} fz="sm">{r.enc_id}</LinkAnchor></TableTd>
                   <TableTd style={{ whiteSpace: "nowrap" }}>{r.dos}</TableTd>
                   <TableTd>{r.provider}</TableTd>
                   <TableTd>{r.codes}</TableTd>
@@ -126,7 +127,7 @@ async function Queue({ searchParams }: { searchParams: SP }) {
                   </TableTd>
                 </TableTr>
               ))}
-              {rows.length === 0 && <TableTr><TableTd colSpan={6}><Text size="sm" c="dimmed">No visits match these filters.</Text></TableTd></TableTr>}
+              {rows.length === 0 && <TableTr><TableTd colSpan={6}><Text size="xs" c="dimmed">No visits match these filters.</Text></TableTd></TableTr>}
             </TableTbody>
           </Table>
         </ScrollArea>

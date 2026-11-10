@@ -47,7 +47,7 @@ function Risks({ groups }: { groups: FlagGroup[] }) {
   return (
     <Stack gap="xs">
       <Title order={3}>Denial risks and warnings</Title>
-      {groups.length === 0 && <Text size="sm" c="dimmed">None.</Text>}
+      {groups.length === 0 && <Text size="xs" c="dimmed">None.</Text>}
       {groups.map((g) => (
         <Alert key={g.ruleId} color={g.denial ? "red" : "yellow"} variant="light" title={
           <Group gap={6}>
@@ -89,11 +89,12 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
   return (
     <>
       <Stack gap={4}>
+        <div className="eyebrow">Visit</div>
         <Group gap="sm" align="baseline">
-          <Title order={1} c="deep.6">{enc}</Title>
+          <Title order={1}>{enc}</Title>
           {v.needs_escalation && <Badge color="deep" variant="light">needs review</Badge>}
         </Group>
-        <Text c="dimmed" size="sm">
+        <Text c="dimmed" size="xs">
           {day(v.dos)} &middot; {v.provider ?? "provider unknown"} &middot; member {v.member_id ?? "unresolved"} (resolved by {v.resolve_method})
         </Text>
       </Stack>
@@ -105,7 +106,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
       <Box hiddenFrom="md"><Risks groups={groups} /></Box>
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         <Stack gap="sm">
-          <Title order={3}>Note <Text span size="sm" c="dimmed" fw={400}>(evidence highlighted)</Text></Title>
+          <Title order={3}>Note <Text span size="xs" c="dimmed" fw={400}>(evidence highlighted)</Text></Title>
           <Highlighted text={v.note} evidence={sug.map((s) => s.evidence as string)} />
           {coder && (
             <Card>
@@ -115,7 +116,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
         </Stack>
         <Stack gap="lg">
           <Box visibleFrom="md"><Risks groups={groups} /></Box>
-          {sources.length === 0 && <Text size="sm" c="dimmed">No codes suggested.</Text>}
+          {sources.length === 0 && <Text size="xs" c="dimmed">No codes suggested.</Text>}
           {sources.map((src) => (
             <Stack key={src} gap="xs">
               <Group gap="xs">
@@ -137,7 +138,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
                     </Group>
                     {hr02 && <Text size="sm" fw={600} c="deep.6" mt={4}>Billable form: V-110 + M-95</Text>}
                     <Text fs="italic" size="sm" mt={4}>&ldquo;{s.evidence}&rdquo;</Text>
-                    {s.note && <Text size="sm" c="dimmed" mt={4}>{s.note}</Text>}
+                    {s.note && <Text size="xs" c="dimmed" mt={4}>{s.note}</Text>}
                     <form action={review}>
                       <input type="hidden" name="enc" value={enc} />
                       <input type="hidden" name="source" value={src} />
@@ -165,7 +166,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
               {nc.map((n) => (
                 <Card key={n.id} p="sm">
                   <Text size="sm"><RuleLink refId={n.code}><b>{n.code}</b></RuleLink>{n.evidence ? <> <i>&ldquo;{n.evidence}&rdquo;</i></> : null}</Text>
-                  <Text size="sm" c="dimmed">{n.reason}</Text>
+                  <Text size="xs" c="dimmed">{n.reason}</Text>
                 </Card>
               ))}
             </Stack>

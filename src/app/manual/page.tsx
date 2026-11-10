@@ -12,9 +12,10 @@ export default function Page() {
         Source: Northgate Family Clinic coding manual v3.2 (provided by the clinic). The tool follows this manual for what to code; Harborline&apos;s rules only produce warnings.
       </Alert>
       <Stack gap={2}>
-        <Title order={1} c="deep.6">{MANUAL.title}</Title>
+        <div className="eyebrow">Reference</div>
+      <Title order={1}>{MANUAL.title}</Title>
         <Text fw={600} ff="var(--font-outfit), sans-serif" fz="lg">{MANUAL.subtitle}</Text>
-        <Text size="sm" c="dimmed">{MANUAL.maintained}</Text>
+        <Text size="xs" c="dimmed">{MANUAL.maintained}</Text>
       </Stack>
       <Text>{MANUAL.intro}</Text>
       <List spacing={4} size="sm">{MANUAL.kinds.map((k) => <ListItem key={k}>{k}</ListItem>)}</List>

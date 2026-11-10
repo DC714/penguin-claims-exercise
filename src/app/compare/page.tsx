@@ -12,7 +12,8 @@ const split = (s: string | null) => (s ?? "").split(",").map((x) => x.trim()).fi
 export default function Page() {
   return (
     <Stack gap="md" py="md">
-      <Title order={1} c="deep.6">Engine vs coder examples</Title>
+      <div className="eyebrow">Validation</div>
+      <Title order={1}>Engine vs coder examples</Title>
       <Suspense fallback={<Center py="xl"><Loader color="brand" /></Center>}>
         <Compare />
       </Suspense>
@@ -37,7 +38,7 @@ async function Compare() {
   const same = parsed.filter((p) => !p.onlyEngine.length && !p.onlyCoder.length).length;
   return (
     <>
-      <Text size="sm" c="dimmed">
+      <Text size="xs" c="dimmed">
         <b>{same}</b> of {parsed.length} match (V-150 and V-110 + M-95 treated as equal). Differences are for review; not all are engine errors, see the decision log.
       </Text>
       <Card p={0}>
@@ -54,7 +55,7 @@ async function Compare() {
                 const diff = p.onlyEngine.length > 0 || p.onlyCoder.length > 0;
                 return (
                   <TableTr key={p.enc_id} className="row" bg={diff ? "var(--mantine-color-yellow-0)" : undefined}>
-                    <TableTd><LinkAnchor href={visitHref(p.enc_id)} className="row-link" fw={600}>{p.enc_id}</LinkAnchor></TableTd>
+                    <TableTd><LinkAnchor href={visitHref(p.enc_id)} className="row-link" fw={600} fz="sm">{p.enc_id}</LinkAnchor></TableTd>
                     <TableTd>{p.coder}</TableTd>
                     <TableTd><Codes list={split(p.codes)} /></TableTd>
                     <TableTd><Codes list={split(p.mine)} /></TableTd>

@@ -6,8 +6,8 @@ import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/c
 import { theme } from "@/theme";
 import { Shell } from "@/components/Shell";
 
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
-const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-public-sans" });
+const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"], variable: "--font-outfit" });
+const publicSans = Public_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-public-sans" });
 
 export const metadata: Metadata = {
   title: "Northgate Coding Assist",

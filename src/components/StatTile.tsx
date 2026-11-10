@@ -10,8 +10,8 @@ export function StatTile({ href, label, value, color, active, ariaLabel }: { hre
       withBorder radius="lg" p="md" className="stat-tile"
       style={{ display: "block", textDecoration: "none", borderColor: active ? "var(--mantine-color-brand-6)" : undefined, borderWidth: active ? 2 : undefined, background: active ? "var(--mantine-color-brand-0)" : undefined }}
     >
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>{label}</Text>
-      <Text ff="var(--font-outfit), sans-serif" fz={28} fw={700} c={color}>{value}</Text>
+      <Text component="div" className="eyebrow">{label}</Text>
+      <Text ff="var(--font-outfit), sans-serif" fz={28} fw={700} c={color ?? "black"}>{value}</Text>
     </Paper>
   );
 }
