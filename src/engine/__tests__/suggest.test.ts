@@ -127,3 +127,52 @@ describe('evidence invariant', () => {
     }
   });
 });
+
+describe('regressions (final review)', () => {
+  const H2 = 'Member ID: M-100001\nDate: 06/07/2026\nProvider: Dr. X\nS/O: ';
+  const r = (body: string) => suggestCodes(H2 + body);
+  const cs = (body: string) => claimCodes(r(body).suggestions);
+  it('A: a hedge word elsewhere in the sentence does not hide a telehealth or urgent visit', () => {
+    expect(cs('Telephone visit to discuss hypertension. Hypertension, stable. Time 10 minutes.')[0]).toBe('V-150');
+    expect(cs('Video visit for BP follow-up, next labs in 3 months. Hypertension stable. Time 10 minutes.')[0]).toBe('V-150');
+    expect(cs('Video visit; last A1c 7.2. Type 2 diabetes, stable.')[0]).toBe('V-150');
+    expect(cs('Walk-in with acute ankle sprain; will splint. Ankle sprain, grade 1. Splint applied.')[0]).toBe('V-300');
+  });
+  it('A: a hedge word right before the visit-type phrase still excludes it', () => {
+    expect(cs('Office visit. Hypertension: stable. Discussed telehealth options for future. Time 20 minutes.')).not.toContain('V-150');
+    expect(cs('Office visit. Hypertension: stable. Last wellness visit was in 2025. Time 20 minutes.')).not.toContain('V-200');
+    expect(cs('Office visit. Hypertension: stable. Prefers a video visit next time. Time 20 minutes.')).not.toContain('V-150');
+  });
+  it('B: an unrelated negation in the same sentence does not cancel a performed procedure', () => {
+    expect(cs('Walk-in with acute ankle injury. Ankle sprain, grade 2. Splint applied; crutches not given as patient has own.')).toContain('P-330');
+    expect(cs('Chest pain since this morning. 12-lead obtained, no prior ECG done for comparison. Time 25 minutes.')).toContain('P-410');
+    expect(cs('Knee pain. Injection performed, no complications noted, no bleeding given pressure. Time 20 minutes.')).toContain('P-310');
+    expect(cs('Knee pain, right. No complications; steroid injection performed into the joint. Time 20 minutes.')).toContain('P-310');
+  });
+  it('B: a negation next to the procedure still cancels it', () => {
+    for (const [t, code] of [['No injection performed today.', 'P-310'], ['Splint not applied', 'P-330'], ['ECG not obtained', 'P-410']] as const) {
+      const x = r(`Office visit. Knee pain: crepitus. ${t}. Time 15m.`);
+      expect(x.suggestions.map((s) => s.code), t).not.toContain(code);
+      expect(x.notCoded.map((n) => n.code), t).toContain(code);
+    }
+  });
+  it('C: age and sex ("52 M") are not read as minutes', () => {
+    const x = r('52 M presents with headache. Headache, tension type.');
+    expect(x.minutes).toBeNull();
+    expect(claimCodes(x.suggestions)[0]).toBe('V-120');
+    expect(suggestCodes('Pt: John Doe, 52 M | 2026-06-03 | Dr. L\n- Follow-up visit.\n- Hypertension, stable.').minutes).toBeNull();
+  });
+  it('C: documented minutes in the usual forms are still read', () => {
+    expect(r('Office visit. Hypertension: stable. Time 55m.').minutes).toBe(55);
+    expect(r('Office visit (40 min). Hypertension: stable.').minutes).toBe(40);
+    expect(r('Office visit. Hypertension: stable. Spent approx 18 min with patient.').minutes).toBe(18);
+    expect(r('Office visit. Hypertension: stable. Visit duration 40 minutes.').minutes).toBe(40);
+    expect(r('Office visit. Hypertension: stable. Total time 25 m.').minutes).toBe(25);
+  });
+  it('E: more than four problems is its own warning and does not force escalation', () => {
+    const x = r('Follow-up visit. Hypertension. Type 2 diabetes. Anxiety. Headache. Asthma. Time 25 minutes.');
+    expect(x.warnings.map((w) => w.kind)).toEqual(['too_many_dx']);
+    expect(x.needsEscalation).toBe(false);
+    expect(x.suggestions.filter((s) => s.code.startsWith('D-')).length).toBe(4);
+  });
+});
