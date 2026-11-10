@@ -56,7 +56,13 @@ export function flagsFor(rec: VisitRecord, codes: string[], world: World): Array
   const denials = checkDenials(codes, denialCtx(rec, world)).map((f) => ({ ...f, kind: 'denial' as const }));
   const warn: Array<Flag & Kind> = [];
   if (!member) warn.push({ ruleId: 'WARN-MEMBER', why: 'Member could not be matched to the Harborline roster; plan unknown so HR-01 was not checked.', fix: 'Confirm the member ID with the clinic.', kind: 'warning' });
-  else if (member.effDt > rec.dos) warn.push({ ruleId: 'WARN-COVERAGE', why: `Coverage began ${member.effDt}, after the date of service ${rec.dos}.`, fix: 'Verify eligibility before billing.', kind: 'warning' });
+  if (member && rec.resolveMethod === 'name') warn.push({
+    ruleId: 'WARN-MEMBER',
+    why: `Matched to ${member.memberId} (${member.first} ${member.last}, born ${member.dob}, ${member.plan} plan) by name only: the note gives neither a member number nor a birth date, so this could be a different member with the same name.`,
+    fix: 'Ask Northgate to confirm the patient\'s birth date or member number before billing.',
+    kind: 'warning',
+  });
+  if (member && member.effDt > rec.dos) warn.push({ ruleId: 'WARN-COVERAGE', why: `Coverage began ${member.effDt}, after the date of service ${rec.dos}.`, fix: 'Verify eligibility before billing.', kind: 'warning' });
   for (const w of rec.warnings.filter((x) => x.kind === 'injection' || x.kind === 'date_mismatch'))
     warn.push({ ruleId: w.kind === 'injection' ? 'WARN-INSTRUCTION' : 'WARN-DATE', why: w.message + (w.evidence ? ` "${w.evidence}"` : ''), fix: w.kind === 'injection' ? 'Review the note; the text was not used for coding.' : 'Check the date of service.', kind: 'warning' });
   return [...denials, ...warn];

@@ -53,5 +53,19 @@ describe('pipeline', () => {
     expect(hr03[0].why).toContain('E-10');
     expect(hr03[0].why).not.toContain('E-9');
   });
+  it('warns to confirm the member when the match was by name only', () => {
+    const t = 'Patient: Ingrid Chen\nDate: 2026-10-20\nS/O: Office visit. Low back pain: paraspinal tenderness. Time 15m.';
+    const recs = buildRecords([raw('E-3', t)], roster);
+    expect(recs[0].resolveMethod).toBe('name');
+    const w = flagsFor(recs[0], ['V-120', 'D-104'], world(recs)).find((f) => f.ruleId === 'WARN-MEMBER');
+    expect(w?.kind).toBe('warning');
+    expect(w?.why).toMatch(/by name only/);
+    expect(w?.fix).toMatch(/birth date or member number/);
+  });
+  it('does not raise the member warning when the member id or name+DOB matched', () => {
+    const t = 'Patient: Ingrid Chen, DOB 11/22/1967\nDate: 2026-10-20\nS/O: Office visit. Low back pain: paraspinal tenderness. Time 15m.';
+    const recs = buildRecords([raw('E-4', t), raw('E-5', 'Member ID: M-100264\nDate: 10/20/2026\nS/O: Office visit. Headache: tension-type pattern. Time 15m.')], roster);
+    for (const r of recs) expect(flagsFor(r, ['V-120'], world(recs)).some((f) => f.ruleId === 'WARN-MEMBER')).toBe(false);
+  });
 });
 

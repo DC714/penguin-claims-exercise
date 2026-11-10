@@ -102,3 +102,7 @@ Not changed: M-25 confidence for ordinary visit-plus-procedure claims, the `PURP
 ## Provider read from the note text (found in review of the live app)
 
 The 50 visits that came from the PDF batch had no provider in the app (and so could not be found with the provider filter), because the provider was only read from the spreadsheet's Provider column and PDFs have no such column. `parseNote` now reads it from the note text (`Provider:`, `Seen by`, or the `| NP J. Whitaker` header tail), and the spreadsheet column is used first when present. Checked on all 260 notes: the text names a provider in every one, and it equals the spreadsheet column on all 210 spreadsheet visits. Other fields were audited at the same time: member id is empty only for the two shared name-and-date-of-birth visits, the date of service is always present, and the patient name and minutes are empty only where the note does not state them.
+
+## Member warning for name-only matches
+
+When a note has no member number and no birth date and the member was matched to the roster by name alone (5 visits: E-50027, E-50187, E-50691, E-50729, E-50948), the visit now carries a `WARN-MEMBER` warning that names the matched member, birth date and plan and asks Northgate to confirm the birth date or member number before billing. Name-and-date-of-birth matches (7 visits) do not carry it. The two visits matching two roster members (E-50687, E-51005) keep their existing unmatched-member warning.
