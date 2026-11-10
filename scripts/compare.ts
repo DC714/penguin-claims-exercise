@@ -1,18 +1,12 @@
-import { loadXlsx, loadPdfs, loadRoster } from '../src/ingest/load';
-import { buildRecords, flagsFor, type World } from '../src/pipeline/world';
+import { flagsFor } from '../src/pipeline/world';
+import { loadWorld } from '../src/pipeline/build';
 import { claimCodes } from '../src/engine/suggest';
 import { toBillable } from '../src/engine/denials';
-import { readFileSync } from 'node:fs';
 
 // Wrapped in main(): the package is CommonJS, so tsx cannot use top-level await here.
 async function main() {
-  const D = process.env.DATA_DIR ?? '../customer_materials';
-  const { visits, coded } = await loadXlsx(`${D}/visits_export_2026-10-20.xlsx`);
-  const pdfs = await loadPdfs(`${D}/notes_pdf_batch2`);
-  const roster = await loadRoster(`${D}/harborline_member_roster.csv`);
-  const priorAuths = JSON.parse(readFileSync('data/prior_auths.json', 'utf8'));
-  const recs = buildRecords([...visits, ...pdfs], roster);
-  const world: World = { members: new Map(roster.map((m) => [m.memberId, m])), priorAuths, visits: recs };
+  const { world, coded } = await loadWorld();
+  const recs = world.visits;
   const canon = (c: string[]) => [...toBillable(c)].sort().join(' ');
 
   let exact = 0;
