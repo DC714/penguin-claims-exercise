@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { LinkAnchor } from "@/components/LinkAnchor";
 import { notFound } from "next/navigation";
-import { Alert, Badge, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Badge, Box, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 import { sql } from "@/lib/db";
 import { day } from "@/lib/format";
 import { Highlighted } from "@/components/Highlighted";
 import { review } from "@/app/actions";
+import { RuleLink } from "@/components/RuleLink";
+import { ruleHref } from "@/lib/ruleLinks";
 
 export default function Page({ params }: { params: Promise<{ enc: string }> }) {
   return (
@@ -20,6 +22,52 @@ export default function Page({ params }: { params: Promise<{ enc: string }> }) {
 
 function safeDecode(s: string) {
   try { return decodeURIComponent(s); } catch { return s; }
+}
+
+interface FlagRow { id: number; source: string; rule_id: string; kind: string; why: string; fix: string }
+interface FlagGroup { ruleId: string; denial: boolean; items: Array<{ why: string; fix: string; sources: string[] }> }
+
+const sourceLabel = (src: string) => (src.startsWith("coder:") ? `coder claim (${src.slice(6)})` : src);
+
+/** One card per rule id; flags from different sources that say the same thing collapse into one line with several source badges. */
+function groupFlags(flags: FlagRow[]): FlagGroup[] {
+  const groups: FlagGroup[] = [];
+  for (const f of flags) {
+    let g = groups.find((x) => x.ruleId === f.rule_id);
+    if (!g) groups.push((g = { ruleId: f.rule_id, denial: false, items: [] }));
+    g.denial ||= f.kind === "denial";
+    const same = g.items.find((i) => i.why === f.why);
+    if (same) { if (!same.sources.includes(f.source)) same.sources.push(f.source); }
+    else g.items.push({ why: f.why, fix: f.fix, sources: [f.source] });
+  }
+  return groups.sort((a, b) => Number(b.denial) - Number(a.denial) || a.ruleId.localeCompare(b.ruleId));
+}
+
+function Risks({ groups }: { groups: FlagGroup[] }) {
+  return (
+    <Stack gap="xs">
+      <Title order={3}>Denial risks and warnings</Title>
+      {groups.length === 0 && <Text size="sm" c="dimmed">None.</Text>}
+      {groups.map((g) => (
+        <Alert key={g.ruleId} color={g.denial ? "red" : "yellow"} variant="light" title={
+          <Group gap={6}>
+            <RuleLink refId={g.ruleId}><span>{g.ruleId}</span></RuleLink>
+            <Badge size="xs" color={g.denial ? "red" : "yellow"}>{g.denial ? "denial" : "warning"}</Badge>
+          </Group>
+        }>
+          <Stack gap="sm">
+            {g.items.map((i) => (
+              <div key={i.why}>
+                <Group gap={4} mb={4}>{i.sources.map((src) => <Badge key={src} size="xs" color="deep" variant="light">{sourceLabel(src)}</Badge>)}</Group>
+                <Text size="sm">{i.why}</Text>
+                <Text size="sm" mt={4}><b>Fix:</b> {i.fix}</Text>
+              </div>
+            ))}
+          </Stack>
+        </Alert>
+      ))}
+    </Stack>
+  );
 }
 
 const confColor: Record<string, string> = { high: "green", medium: "yellow", low: "red" };
@@ -37,6 +85,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
   ]);
   const coder = coderRows[0];
   const sources = [...new Set(sug.map((s) => s.source as string))];
+  const groups = groupFlags(flags as FlagRow[]);
   return (
     <>
       <Stack gap={4}>
@@ -53,6 +102,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
           Same note as <LinkAnchor href={`/visits/${encodeURIComponent(v.duplicate_of)}`}>{v.duplicate_of}</LinkAnchor>.
         </Alert>
       )}
+      <Box hiddenFrom="md"><Risks groups={groups} /></Box>
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         <Stack gap="sm">
           <Title order={3}>Note <Text span size="sm" c="dimmed" fw={400}>(evidence highlighted)</Text></Title>
@@ -64,6 +114,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
           )}
         </Stack>
         <Stack gap="lg">
+          <Box visibleFrom="md"><Risks groups={groups} /></Box>
           {sources.length === 0 && <Text size="sm" c="dimmed">No codes suggested.</Text>}
           {sources.map((src) => (
             <Stack key={src} gap="xs">
@@ -78,9 +129,9 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
                 return (
                   <Card key={s.id} p="md">
                     <Group justify="space-between" wrap="nowrap">
-                      <Text fw={700} fz="lg" ff="var(--font-outfit), sans-serif">{s.code}</Text>
+                      <RuleLink refId={s.code}><Text fw={700} fz="lg" ff="var(--font-outfit), sans-serif">{s.code}</Text></RuleLink>
                       <Group gap={6}>
-                        {s.rule && <Badge variant="outline" color="gray">{s.rule}</Badge>}
+                        {s.rule && <RuleLink refId={s.rule}><Badge variant="outline" color="gray" style={ruleHref(s.rule) ? { cursor: "pointer" } : undefined}>{s.rule}</Badge></RuleLink>}
                         {s.confidence && <Badge color={confColor[String(s.confidence).toLowerCase()] ?? "gray"}>{s.confidence}</Badge>}
                       </Group>
                     </Group>
@@ -92,9 +143,9 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
                       <input type="hidden" name="source" value={src} />
                       <input type="hidden" name="code" value={s.code} />
                       <Group gap="xs" mt="sm" align="flex-end">
-                        <TextInput name="reviewer" placeholder="Your name" aria-label="Reviewer name" size="xs" w={140} defaultValue={latest?.reviewer === "anonymous" ? "" : latest?.reviewer} />
-                        <Button type="submit" name="decision" value="accept" size="xs" color="green" variant={latest?.decision === "accept" ? "filled" : "light"}>Accept</Button>
-                        <Button type="submit" name="decision" value="reject" size="xs" color="red" variant={latest?.decision === "reject" ? "filled" : "light"}>Reject</Button>
+                        <TextInput name="reviewer" placeholder="Your name" aria-label="Reviewer name" maxLength={60} size="xs" w={140} defaultValue={latest?.reviewer === "anonymous" ? "" : latest?.reviewer} />
+                        <Button type="submit" name="decision" value="accept" aria-label={`Accept ${s.code}`} size="xs" color="green" variant={latest?.decision === "accept" ? "filled" : "light"}>Accept</Button>
+                        <Button type="submit" name="decision" value="reject" aria-label={`Reject ${s.code}`} size="xs" color="red" variant={latest?.decision === "reject" ? "filled" : "light"}>Reject</Button>
                       </Group>
                     </form>
                     {latest && (
@@ -108,33 +159,12 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
             </Stack>
           ))}
 
-          <Stack gap="xs">
-            <Title order={3}>Denial risks and warnings</Title>
-            {flags.length === 0 && <Text size="sm" c="dimmed">None.</Text>}
-            {flags.map((f) => {
-              const isCoder = String(f.source).startsWith("coder:");
-              const denial = f.kind === "denial";
-              return (
-                <Alert key={f.id} color={denial ? "red" : "yellow"} variant="light" title={
-                  <Group gap={6}>
-                    <span>{f.rule_id}</span>
-                    <Badge size="xs" color={denial ? "red" : "yellow"}>{denial ? "denial" : "warning"}</Badge>
-                    <Badge size="xs" color="deep" variant="light">{isCoder ? `coder claim (${String(f.source).slice(6)})` : String(f.source)}</Badge>
-                  </Group>
-                }>
-                  <Text size="sm">{f.why}</Text>
-                  <Text size="sm" mt={4}><b>Fix:</b> {f.fix}</Text>
-                </Alert>
-              );
-            })}
-          </Stack>
-
           {nc.length > 0 && (
             <Stack gap="xs">
               <Title order={3}>Not coded on purpose (G3)</Title>
               {nc.map((n) => (
                 <Card key={n.id} p="sm">
-                  <Text size="sm"><b>{n.code}</b>{n.evidence ? <> <i>&ldquo;{n.evidence}&rdquo;</i></> : null}</Text>
+                  <Text size="sm"><RuleLink refId={n.code}><b>{n.code}</b></RuleLink>{n.evidence ? <> <i>&ldquo;{n.evidence}&rdquo;</i></> : null}</Text>
                   <Text size="sm" c="dimmed">{n.reason}</Text>
                 </Card>
               ))}

@@ -3,8 +3,10 @@ import { LinkAnchor } from "@/components/LinkAnchor";
 import { Badge, Card, Center, Group, Loader, ScrollArea, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
 import { sql } from "@/lib/db";
 import { visitHref } from "@/lib/format";
+import { toBillable } from "@/engine/denials";
+import { RuleLink } from "@/components/RuleLink";
+import { ruleHref } from "@/lib/ruleLinks";
 
-const billable = (codes: string[]) => codes.flatMap((c) => (c === "V-150" ? ["V-110", "M-95"] : [c]));
 const split = (s: string | null) => (s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 
 export default function Page() {
@@ -19,7 +21,7 @@ export default function Page() {
 }
 
 function Codes({ list, color }: { list: string[]; color?: string }) {
-  return <Group gap={4}>{list.map((c) => <Badge key={c} color={color ?? "gray"} variant={color ? "light" : "outline"}>{c}</Badge>)}</Group>;
+  return <Group gap={4}>{list.map((c) => <RuleLink key={c} refId={c}><Badge color={color ?? "gray"} variant={color ? "light" : "outline"} style={{ cursor: ruleHref(c) ? "pointer" : undefined }}>{c}</Badge></RuleLink>)}</Group>;
 }
 
 async function Compare() {
@@ -29,7 +31,7 @@ async function Compare() {
       (select string_agg(distinct rule_id, ', ') from denial_flags f where f.enc_id = e.enc_id and f.source = 'coder:' || e.coder) as coder_flags
     from coder_examples e order by e.enc_id`) as Array<{ enc_id: string; codes: string; coder: string; mine: string | null; coder_flags: string | null }>;
   const parsed = rows.map((r) => {
-    const a = new Set(billable(split(r.mine))), b = new Set(billable(split(r.codes)));
+    const a = new Set(toBillable(split(r.mine))), b = new Set(toBillable(split(r.codes)));
     return { ...r, onlyEngine: [...a].filter((x) => !b.has(x)), onlyCoder: [...b].filter((x) => !a.has(x)) };
   });
   const same = parsed.filter((p) => !p.onlyEngine.length && !p.onlyCoder.length).length;
