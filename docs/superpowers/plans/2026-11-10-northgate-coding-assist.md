@@ -1094,6 +1094,18 @@ Expected: rows for HR-01, HR-02, HR-03, HR-08 and WARN-* at minimum.
 
 ---
 
+### UI addendum for Tasks 8 and 9 (supersedes the Tailwind JSX below): Mantine + Penguin AI branding
+
+Dave asked for the Penguin AI look (penguinai.co) and Mantine. The JSX in Tasks 8 and 9 shows structure and data only; implement it with Mantine components (`AppShell`, `Table`, `Badge`, `Card`, `Group`, `Stack`, `Alert`, `Button`, `Mark`, `Text`, `Anchor`, `Title`, `Tabs`/`SimpleGrid`) instead of Tailwind classes. Rules:
+- **Remove Tailwind** (the scaffold added it; its preflight fights Mantine): uninstall `tailwindcss` and `@tailwindcss/postcss`, delete the `turbopack.rules` tailwind loader block in `next.config.ts` and `postcss.config.mjs` if present, and strip the tailwind `@import`/`@theme` lines from `src/app/globals.css`. Keep `cacheComponents` as is.
+- **Install:** `npm i @mantine/core @mantine/hooks` (same major as `/Users/home/Downloads/Claude_Projects/penguin-demo`, which uses ^9.7.3 with Next 16).
+- **Theme:** copy `/Users/home/Downloads/Claude_Projects/penguin-demo/src/theme.ts` to `src/theme.ts`. It encodes the penguinai.co tokens (verified against the live site 2026-11-10): primary pink `#fe017d` (hover `#d6016a`), deep teal `#05526d`, text `#1a1a1a`, cream `#f9f7f2`, slate `#45556c`; headings Outfit (600-800), body Public Sans. Load both fonts with `next/font/google` as CSS variables `--font-outfit` and `--font-public-sans` on `<html>`, wrap the app in `MantineProvider theme={theme}` and import `@mantine/core/styles.css` (follow the layout in `penguin-demo/src/app/layout.tsx`). Use `ColorSchemeScript` only if the demo does; default to light with cream `#f9f7f2` page background.
+- **Semantics:** pink = primary actions and the accent; deep teal for headers/nav text and "source" badges; red (Mantine `red`) for denial risks, yellow for warnings, green for accepted. Evidence highlighting uses Mantine `Mark` (light pink `#ffd9ec`).
+- **Header:** `AppShell.Header` with the text wordmark "Northgate Coding Assist" in Outfit plus a small muted "pilot review build" label and nav links Queue / Coder comparison. Do not copy Penguin AI's logo or imply the app is a Penguin AI product.
+- **Next 16 Cache Components:** do NOT export `dynamic`; put each DB-reading component in its own async component wrapped in `<Suspense fallback={...}>`; `params`/`searchParams` are Promises (see `docs/decision-log.md` "Next.js version notes"). Server actions stay `'use server'` functions used with `<form action>`; Mantine `Button` supports `type="submit"` with `name`/`value`.
+- **Accessibility/UX:** table rows are links; evidence quote shown in italics under each code; confidence shown as a Badge; every flag shows rule id, why, and fix; keyboard-focusable accept/reject buttons.
+- **Verify** with the browser preview tools: start the dev server, check `/`, a visit page and `/compare` at desktop and mobile widths (resize_window), no console errors.
+
 ### Task 8: Review queue and visit page
 
 **Files:**
