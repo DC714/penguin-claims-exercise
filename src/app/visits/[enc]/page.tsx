@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import Link from "next/link";
+import { LinkAnchor } from "@/components/LinkAnchor";
 import { notFound } from "next/navigation";
-import { Alert, Anchor, Badge, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Badge, Button, Card, Center, Group, Loader, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 import { sql } from "@/lib/db";
 import { day } from "@/lib/format";
 import { Highlighted } from "@/components/Highlighted";
@@ -10,7 +10,7 @@ import { review } from "@/app/actions";
 export default function Page({ params }: { params: Promise<{ enc: string }> }) {
   return (
     <Stack gap="md" py="md">
-      <Anchor component={Link} href="/" size="sm">&larr; Queue</Anchor>
+      <LinkAnchor href="/" size="sm">&larr; Queue</LinkAnchor>
       <Suspense fallback={<Center py="xl"><Loader color="brand" /></Center>}>
         <Visit params={params} />
       </Suspense>
@@ -50,7 +50,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
       </Stack>
       {v.duplicate_of && (
         <Alert color="yellow" title="Duplicate note">
-          Same note as <Anchor component={Link} href={`/visits/${encodeURIComponent(v.duplicate_of)}`}>{v.duplicate_of}</Anchor>.
+          Same note as <LinkAnchor href={`/visits/${encodeURIComponent(v.duplicate_of)}`}>{v.duplicate_of}</LinkAnchor>.
         </Alert>
       )}
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
@@ -119,7 +119,7 @@ async function Visit({ params }: { params: Promise<{ enc: string }> }) {
                   <Group gap={6}>
                     <span>{f.rule_id}</span>
                     <Badge size="xs" color={denial ? "red" : "yellow"}>{denial ? "denial" : "warning"}</Badge>
-                    {isCoder && <Badge size="xs" color="deep" variant="light">coder claim ({String(f.source).slice(6)})</Badge>}
+                    <Badge size="xs" color="deep" variant="light">{isCoder ? `coder claim (${String(f.source).slice(6)})` : String(f.source)}</Badge>
                   </Group>
                 }>
                   <Text size="sm">{f.why}</Text>

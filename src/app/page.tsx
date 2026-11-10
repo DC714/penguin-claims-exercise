@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Anchor, Badge, Card, Group, Loader, Paper, SimpleGrid, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, Center, ScrollArea } from "@mantine/core";
+import { LinkAnchor } from "@/components/LinkAnchor";
+import { Badge, Card, Group, Loader, Paper, SimpleGrid, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title, Center, ScrollArea } from "@mantine/core";
 import { sql } from "@/lib/db";
 import { day, visitHref } from "@/lib/format";
 
@@ -56,7 +56,7 @@ async function Queue({ searchParams }: { searchParams: Promise<{ risk?: string }
       </Group>
       <Group justify="space-between">
         <Text size="sm" c="dimmed">{shown.length} visits, likely denials first. Duplicate notes are hidden.</Text>
-        <Anchor component={Link} href={risk ? "/" : "/?risk=1"} size="sm">{risk ? "Show all" : "Only likely denials"}</Anchor>
+        <LinkAnchor href={risk ? "/" : "/?risk=1"} size="sm">{risk ? "Show all" : "Only likely denials"}</LinkAnchor>
       </Group>
       <Card p={0}>
         <ScrollArea>
@@ -67,7 +67,7 @@ async function Queue({ searchParams }: { searchParams: Promise<{ risk?: string }
             <TableTbody>
               {shown.map((r) => (
                 <TableTr key={r.enc_id} className="row">
-                  <TableTd><Anchor component={Link} href={visitHref(r.enc_id)} className="row-link" fw={600}>{r.enc_id}</Anchor></TableTd>
+                  <TableTd><LinkAnchor href={visitHref(r.enc_id)} className="row-link" fw={600}>{r.enc_id}</LinkAnchor></TableTd>
                   <TableTd>{day(r.dos)}</TableTd>
                   <TableTd>{r.provider}</TableTd>
                   <TableTd>{r.codes}</TableTd>

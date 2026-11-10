@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Anchor, Badge, Card, Center, Group, Loader, ScrollArea, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
+import { LinkAnchor } from "@/components/LinkAnchor";
+import { Badge, Card, Center, Group, Loader, ScrollArea, Stack, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
 import { sql } from "@/lib/db";
 import { visitHref } from "@/lib/format";
 
@@ -52,7 +52,7 @@ async function Compare() {
                 const diff = p.onlyEngine.length > 0 || p.onlyCoder.length > 0;
                 return (
                   <TableTr key={p.enc_id} className="row" bg={diff ? "var(--mantine-color-yellow-0)" : undefined}>
-                    <TableTd><Anchor component={Link} href={visitHref(p.enc_id)} className="row-link" fw={600}>{p.enc_id}</Anchor></TableTd>
+                    <TableTd><LinkAnchor href={visitHref(p.enc_id)} className="row-link" fw={600}>{p.enc_id}</LinkAnchor></TableTd>
                     <TableTd>{p.coder}</TableTd>
                     <TableTd><Codes list={split(p.codes)} /></TableTd>
                     <TableTd><Codes list={split(p.mine)} /></TableTd>

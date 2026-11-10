@@ -2,3 +2,4 @@ body { background: #f9f7f2; }
 pre { margin: 0; }
 .row-link::after { content: ""; position: absolute; inset: 0; }
 tr.row { position: relative; }
+.row-link { white-space: nowrap; }
